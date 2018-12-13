@@ -8,6 +8,7 @@
 
 import logging.handlers
 from siteState import *
+import httplib
 from configurationManager import ComunicationConfig
 
 class WebClient:
@@ -23,19 +24,29 @@ class WebClient:
 		self._logger.debug('### Reading Site State')
 
 		try:
-			# TODO check site state
-			# modBusResponse = self._client.read_holding_registers(kInitialAddress, kRecordsToRead)
-			# if not isinstance(modBusResponse.registers, list):
-			# 	self._logger.error('### ModBusClient readPLCRegisters exception: check PLC addresses')
-			# elif len(modBusResponse.registers) < kRecordsToRead:
-			# 	self._logger.error('### ModBusClient readPLCRegisters short response: invalid number of records')
+			siteState = SiteState.defaultSiteState()
 
-			# siteState = BoothState(modBusResponse.registers, self._logger)
-			# if isinstance(boothState, BoothState):
-			# 	self._logBoothState(boothState)
-			# 	self._boothState = boothState
+			conn = httplib.HTTPConnection("www.google.com")
+			conn.request("HEAD", "/")
+			googleResponse = conn.getresponse()
 
-			return SiteState.defaultSiteState()
+			if googleResponse.status == 200:
+				#There is 
+				self._logger.info('### Google isReachable')
+				site = self._comunicationConfig.url
+				conn = httplib.HTTPConnection(self._comunicationConfig.url)
+				conn.request("HEAD", "/")
+				siteResponse = conn.getresponse()
+				if siteResponse.status == 200 or siteResponse.status == 301:
+					self._logger.info('### Site is up: ' + site)
+					siteState.updateState(SiteStateUp)
+				else:
+					self._logger.info('### Site is down: ' + site + " code: " + str(siteResponse.status) + siteResponse.reason)
+					siteState.updateState(SiteStateDown)
+			else:
+				siteState.updateState(SiteStateNotRecheable)
+
+			return siteState
 
 		except Exception as e:
 			self._logger.error('### WebClient updeteSiteState exception: ' + str(e), exc_info=True)

@@ -24,12 +24,12 @@ class SiteState:
 		
 	@staticmethod
 	def _defaultSiteState():
-		"""Generate default sireState"""
+		"""Generate default siteState"""
 		return SiteStateUnknown
 
 	@staticmethod
 	def defaultSiteState():
-		"""Generate default sireState"""
+		"""Generate default siteState"""
 		return SiteState()
 
 	## PUBLIC
@@ -40,5 +40,5 @@ class SiteState:
 		return self._state
 
 	def updateState(self, newState):
-		"""Generate default sireState"""
+		"""Generate default siteState"""
 		self._state = newState

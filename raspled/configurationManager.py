@@ -9,7 +9,7 @@
 import ConfigParser
 import logging.handlers
 
-kMinRefreshInterval = 5
+kMinRefreshInterval = 2
 kMaxRefreshInterval = 10*60
 
 class ComunicationConfig:
@@ -54,7 +54,7 @@ class ConfigurationManager:
 
 	def _parseComunications(self, settings):
 		url = settings.get("COMUNICATIONS", "URL")
-		refreshInterval = settings.getfloat("COMUNICATIONS", "PLC_REFRESH_INTERVAL")
+		refreshInterval = settings.getfloat("COMUNICATIONS", "REFRESH_INTERVAL")
 		self._comunicationConfig = ComunicationConfig(url, refreshInterval)
 
 	@property

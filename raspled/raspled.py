@@ -33,7 +33,7 @@ class RaspLedApplication():
 		self._configureRunLoop()
 		
 		self._startScreen()
-		
+	
 	
 	def _startScreen(self):
 		try:
@@ -103,6 +103,7 @@ class RaspLedApplication():
 		self._setupWebClient()
 		
 		while self._runLoop:
+			self._logger.info('### Main loop again')
 			try:
 				siteState = self._webClient.updateSiteState()
 				if isinstance(siteState, SiteState):
@@ -111,7 +112,7 @@ class RaspLedApplication():
 						
 					sleep(self._settings.comunication.refreshInterval)
 				else:
-					self._logger.error('### Error: _mainLoop invalid booth state')
+					self._logger.error('### Error: _mainLoop invalid site state')
 					sleep(self._settings.comunication.refreshInterval)
 
 			except Exception as e:

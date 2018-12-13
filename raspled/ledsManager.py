@@ -7,7 +7,7 @@
 #
 
 import os
-from boothState import *
+from siteState import *
 from threading import Lock
 import threading
 import glib
@@ -50,7 +50,7 @@ class LedsManager:
 		self._currentBlueValue = 0
 		self._lock = Lock()
 		self._cancelMainLoop = False
-		self._boothState = BoothState.defaultBoothState()
+		self._siteState = SiteState.defaultSiteState()
 
 
 	def resetLeds(self):
@@ -67,23 +67,23 @@ class LedsManager:
 		self._updateThread.setDaemon(True)
 		self._updateThread.start()
 		
-	def updateLeds(self, boothState):
+	def updateLeds(self, siteState):
 		"""Updates internal data. Can be called form any thread. It actualices value ar main thread"""
 		self._logger.debug("%%% LEDS Update")
-		assert isinstance(boothState, BoothState)
+		assert isinstance(siteState, SiteState)
 		try:
-			glib.idle_add(self._update_boothState, boothState)  # to the main thread
+			glib.idle_add(self._update_siteState, siteState)  # to the main thread
 		except Exception as e:
 			self._logger.error('%%% LEDS Error: updateScreen: ' + str(e), exc_info=True)
 	
 	# PRIVATE
 	
-	def _update_boothState(self, boothState):
-		"""Updates private boothState (in main thread)"""
+	def _update_siteState(self, siteState):
+		"""Updates private siteState (in main thread)"""
 		self._logger.debug("%%% LEDS Updating leds")
 		self._lock.acquire()
 		try:
-			self._boothState = boothState
+			self._siteState = siteState
 		finally:
 			self._lock.release()
 		
@@ -93,7 +93,7 @@ class LedsManager:
 		while not self._cancelMainLoop:
 			self._lock.acquire()
 			try:
-				boothState = copy.deepcopy(self._boothState)  # create a copy to avoid race conditions
+				siteState = copy.deepcopy(self._siteState)  # create a copy to avoid race conditions
 			except Exception as e:
 				self._logger.error('%%% LEDS  Error: _leedsLoop lock.acquire' + str(e), exc_info=True)
 			finally:
@@ -101,25 +101,27 @@ class LedsManager:
 				
 			ledsLog = ""
 			newProgram = []
-			if boothState.colorLeds == LedColorRed: # Calor
-				newState = StateHot
-				newProgram = ProgramHot
-				ledsLog = "Hot"
-			elif boothState.colorLeds == LedColorBlue:  # Frio
-				newState = StateCold
-				newProgram = ProgramCold
-				ledsLog = "Cold"
-			elif boothState.colorLeds == LedColorWhite:  # Secado
-				newState = stateDry
-				newProgram = ProgramDry
-				ledsLog = "Drying"
-			elif boothState.colorLeds == LedColorOrange:  # Mantenimiento
-				newState = StateMaintenance
-				newProgram = ProgramMaintenance
-				ledsLog = "Maintenance"
-			else:  # Resto
-				newState = StateNone
-				newProgram = ProgramStandBy
+			newState = StateHot
+			newProgram = ProgramHot
+			# if siteState.colorLeds == LedColorRed: # Calor
+				# newState = StateHot
+				# newProgram = ProgramHot
+				# ledsLog = "Hot"
+			# elif siteState.colorLeds == LedColorBlue:  # Frio
+			# 	newState = StateCold
+			# 	newProgram = ProgramCold
+			# 	ledsLog = "Cold"
+			# elif siteState.colorLeds == LedColorWhite:  # Secado
+			# 	newState = stateDry
+			# 	newProgram = ProgramDry
+			# 	ledsLog = "Drying"
+			# elif siteState.colorLeds == LedColorOrange:  # Mantenimiento
+			# 	newState = StateMaintenance
+			# 	newProgram = ProgramMaintenance
+			# 	ledsLog = "Maintenance"
+			# else:  # Resto
+			# 	newState = StateNone
+			# 	newProgram = ProgramStandBy
 	
 			if self._previousState != newState:
 				self._logger.info("%%% LEDS  WriteLeds: Changing " + ledsLog)

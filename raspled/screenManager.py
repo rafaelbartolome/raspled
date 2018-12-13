@@ -17,7 +17,7 @@ import threading
 from siteState import *
 from configurationManager import *
 
-kHomePath = "./raspled/"
+kHomePath = "../raspled/"
 kTimeIntervalBetweenScreenUpdates = 0.5 # seconds
 
 class ScreenManager:
@@ -44,7 +44,7 @@ class ScreenManager:
 
 		self._createImages()
 		self._resetImageState()
-		self._loadImages(self._settings.language, self._settings.flavor)
+		self._loadImages()
 
 		self._createFonts()
 		self._createLabels()
@@ -70,7 +70,7 @@ class ScreenManager:
 	def updateScreen(self, siteState):
 		"""Updates internal data. Can be called form any thread. It actualices value ar main thread"""
 		self._logger.debug("*** Screeen Update")
-		assert isinstance(siteState, SiteState)
+		# assert isinstance(siteState, SiteState)
 		try:
 			glib.idle_add(self._update_siteState, siteState) # to the main thread
 		except Exception as e:
@@ -99,7 +99,6 @@ class ScreenManager:
 				self._logger.error('*** ScreenManager Error: _screenLoop lock.acquire' + str(e), exc_info=True)
 			finally:
 				self._lock.release()
-
 			try:
 				# Acquiring the gtk global mutex
 				gtk.threads_enter()
@@ -169,7 +168,7 @@ class ScreenManager:
 		self._yellowShowing = False
 		self._blueShowing = False
 
-	def _loadImages(self, language, flavor):
+	def _loadImages(self):
 		try:
 			#common images
 			baseImagesPath = kHomePath + "images/"
@@ -185,7 +184,7 @@ class ScreenManager:
 
 	def _createFonts(self):
 		try:
-			self._fontSmall = pango.FontDescription("Helvetica 8")
+			self._fontSmall = pango.FontDescription("Helvetica 28")
 		except Exception as e:
 			self._logger.error('*** ScreenManager Error: _createFonts' + str(e), exc_info=True)
 			raise
@@ -212,7 +211,7 @@ class ScreenManager:
 			fixedContainer.put(self._blueImage, 0, 0)
 			fixedContainer.put(self._yellowImage, 0, 0)
 
-			fixedContainer.put(self._descriptionLabel, 0, 20)
+			fixedContainer.put(self._descriptionLabel, 110, 260)
 
 			return fixedContainer
 
@@ -231,26 +230,26 @@ class ScreenManager:
 			self._logger.error('*** ScreenManager Error: _hideFullViews' + str(e), exc_info=True)
 
 	def _updateLedColor(self, siteState):
-		self._logger.debug("*** Screen _updateLedColor")
+		self._logger.info("*** Screen _updateLedColor: " + str(siteState.state))
 		try:
 			self._yellowImage.hide_all()
 			self._greenImage.hide_all()
 			self._redImage.hide_all()
 			self._blueImage.hide_all()
-
-			if siteState == SiteStateUnknown:
+			stringToShow = ""
+			if siteState.state == SiteStateUnknown:
 				self._yellowImage.show_all()
-				stringToShow = "Unknown"
-			elif siteState == SiteStateUp:
+				stringToShow = "Server Unknown"
+			elif siteState.state == SiteStateUp:
 				self._greenImage.show_all()
-				stringToShow = "Up & running"
-			elif siteState == SiteStateDown:
+				stringToShow = "Up and running"
+			elif siteState.state == SiteStateDown:
 				self._redImage.show_all()
-				stringToShow = "Down"
-			elif siteState == SiteStateNotRecheable:
+				stringToShow = "Server looks Down"
+			elif siteState.state == SiteStateNotRecheable:
 				self._blueImage.show_all()
 				stringToShow = "Not recheable"
 
-			self._descriptionLabel.set_markup('<span color="black">' + stringToShow + "</span>")
+			self._descriptionLabel.set_markup('<span color="white">' + stringToShow + "</span>")
 		except Exception as e:
 			self._logger.error('*** ScreenManager Error: _updateLedColor: ' + str(e))
