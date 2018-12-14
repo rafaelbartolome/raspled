@@ -193,7 +193,7 @@ class ScreenManager:
 		try:
 			self._descriptionLabel = gtk.Label("")
 			self._descriptionLabel.modify_font(self._fontSmall)
-
+			self._descriptionLabel.set_justify(gtk.JUSTIFY_CENTER)
 		except Exception as e:
 			self._logger.error('*** ScreenManager Error: _createLabels' + str(e), exc_info=True)
 			raise
@@ -210,7 +210,8 @@ class ScreenManager:
 			fixedContainer.put(self._blueImage, 0, 0)
 			fixedContainer.put(self._yellowImage, 0, 0)
 
-			fixedContainer.put(self._descriptionLabel, 110, 260)
+			self._descriptionLabel.set_size_request(400, 30)
+			fixedContainer.put(self._descriptionLabel, 40, 260)
 
 			return fixedContainer
 

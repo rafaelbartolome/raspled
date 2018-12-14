@@ -106,7 +106,7 @@ class LedsManager:
 		self._logger.info("%%% LEDS _leedsLoop")
 		
 		while not self._cancelMainLoop:
-			self._logger.info("%%% LEDS _leedsLoop again")
+			# self._logger.info("%%% LEDS _leedsLoop again")
 			self._lock.acquire()
 			try:
 				siteState = copy.deepcopy(self._siteState)  # create a copy to avoid race conditions
@@ -117,8 +117,6 @@ class LedsManager:
 				
 			ledsLog = ""
 			newProgram = []
-			# newState = StateDown
-			# newProgram = ProgramRed
 			if siteState.state == SiteStateDown: # Red
 				newState = StateDown
 				newProgram = ProgramRed
@@ -153,7 +151,6 @@ class LedsManager:
 				self._logger.info("%%% LEDS _leedsLoop again state " + str(self._previousState) + " " + ledsLog)
 				self._writeProgram(self._previousProgram)
 
-			# self._logger.info("%%% LEDS _leedsLoop again state " + str(self._previousState))
 			sleep(kTimeIntervalBetweenLedsUpdates)
 
 	def _writePWM(self, pin, value):

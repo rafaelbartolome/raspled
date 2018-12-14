@@ -7,8 +7,10 @@
 #
 
 import logging.handlers
+import socket
 from siteState import *
 import httplib
+import urllib2
 from configurationManager import ComunicationConfig
 
 class WebClient:
@@ -25,25 +27,33 @@ class WebClient:
 
 		try:
 			siteState = SiteState.defaultSiteState()
+			site = self._comunicationConfig.url
 
-			conn = httplib.HTTPConnection("www.google.com")
-			conn.request("HEAD", "/")
-			googleResponse = conn.getresponse()
+			isConnected = self.isConnected()
+			if isConnected:
+				#There is connection
+				self._logger.info('### Internet isReachable')
 
-			if googleResponse.status == 200:
-				#There is 
-				self._logger.info('### Google isReachable')
-				site = self._comunicationConfig.url
-				conn = httplib.HTTPConnection(self._comunicationConfig.url)
-				conn.request("HEAD", "/")
-				siteResponse = conn.getresponse()
-				if siteResponse.status == 200 or siteResponse.status == 301:
+				if self.canOpenUrl(site):
 					self._logger.info('### Site is up: ' + site)
 					siteState.updateState(SiteStateUp)
 				else:
-					self._logger.info('### Site is down: ' + site + " code: " + str(siteResponse.status) + siteResponse.reason)
+					self._logger.info('### Site is down: ' + site)
+
 					siteState.updateState(SiteStateDown)
+				
+				# site = self._comunicationConfig.url
+				# conn = httplib.HTTPConnection(self._comunicationConfig.url, timeout=2)
+				# conn.request("HEAD", "/")
+				# siteResponse = conn.getresponse()
+				# if siteResponse.status == 200 or siteResponse.status == 301:
+				# 	self._logger.info('### Site is up: ' + site)
+				# 	siteState.updateState(SiteStateUp)
+				# else:
+				# 	self._logger.info('### Site is down: ' + site + " code: " + str(siteResponse.status) + siteResponse.reason)
+				# 	siteState.updateState(SiteStateDown)
 			else:
+				self._logger.info('### Internet is NOT Reachable')
 				siteState.updateState(SiteStateNotRecheable)
 
 			return siteState
@@ -52,3 +62,19 @@ class WebClient:
 			self._logger.error('### WebClient updeteSiteState exception: ' + str(e), exc_info=True)
 			raise
 
+	def isConnected(self):
+		try:
+			socket.setdefaulttimeout(2)
+			socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect(("8.8.8.8", 53)) #Google default DNS
+			return True
+		except Exception as e:
+			self._logger.error('### WebClient isConnected check socket exception: ' + str(e), exc_info=True)
+			return False
+
+	def canOpenUrl(self, site):
+		try:
+			urllib2.urlopen(site, timeout=2)
+			return True
+		except urllib2.URLError as e: 
+			self._logger.error('### WebClient canOpenUrl  exception: ' + str(e), exc_info=True)
+			return False
