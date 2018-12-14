@@ -12,7 +12,7 @@ from time import sleep
 
 # logging
 logger = logging.getLogger()
-handler = logging.handlers.RotatingFileHandler('raspled.log', mode='a', maxBytes=7340032, backupCount=3, encoding=None, delay=False)
+handler = logging.handlers.RotatingFileHandler('/home/pi/raspled.log', mode='a', maxBytes=7340032, backupCount=3, encoding=None, delay=False)
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
@@ -24,7 +24,7 @@ while True:
 		logger.info('**************        RaspLed, starting script       *******************')
 		logger.info('************************************************************************')
 
-		command = 'sudo python /home/pi/raspled/raspled.py'.split()
+		command = ' sudo python /home/pi/raspled/raspled.py'.split()
 		p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 		while True:
 			retcode = p.poll()  # returns None while subprocess is running

@@ -148,7 +148,7 @@ class LedsManager:
 							 newProgram[4]])
 				self._previousProgram = newProgram
 			else:
-				self._logger.info("%%% LEDS _leedsLoop again state " + str(self._previousState) + " " + ledsLog)
+				# self._logger.info("%%% LEDS _leedsLoop again state " + str(self._previousState) + " " + ledsLog)
 				self._writeProgram(self._previousProgram)
 
 			sleep(kTimeIntervalBetweenLedsUpdates)

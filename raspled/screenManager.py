@@ -17,7 +17,7 @@ import threading
 from siteState import *
 from configurationManager import *
 
-kHomePath = "../raspled/"
+kHomePath = "/home/pi/raspled/"
 kTimeIntervalBetweenScreenUpdates = 0.5 # seconds
 
 class ScreenManager:

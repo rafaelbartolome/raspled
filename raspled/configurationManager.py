@@ -36,7 +36,7 @@ class ConfigurationManager:
 
 	def __execute(self):
 		settings = ConfigParser.ConfigParser()
-		settings.read("../raspled.ini")
+		settings.read("/home/pi/raspled.ini")
 
 		self._parseComunications(settings)
 		self._debug = settings.getboolean("GENERAL CONFIGURATION", "CONF_DEBUG")
