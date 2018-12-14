@@ -70,10 +70,8 @@ Don't forget to attach a small resistor to color channels.
 * Pango for text rendering 
 * [pi-blaster](https://github.com/sarfata/pi-blaster) for IO comunications
 
-
 <p align="center">
-  <img src="https://rafaelbartolome.github.io/raspled/md-img/demo.jpg
-  " alt="Demo"
+  <img src="https://rafaelbartolome.github.io/raspled/md-img/demo.jpg" alt="Demo"
        width="600" height="521">
 </p>
 
@@ -131,4 +129,3 @@ Most important options are:
 This is a demo project executed in about 6 hours in order to refresh some python concepts and to play a little bit with leds and wires. Don't look for a nice implementation in code ;)
 
 Any doubt or comment is welcomed.
->>>>>>> Docs
