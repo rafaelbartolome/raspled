@@ -103,7 +103,7 @@ class RaspLedApplication():
 		self._setupWebClient()
 		
 		while self._runLoop:
-			self._logger.info('### Main loop again')
+			# self._logger.info('### Main loop again')
 			try:
 				siteState = self._webClient.updateSiteState()
 				if isinstance(siteState, SiteState):

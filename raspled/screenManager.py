@@ -89,7 +89,6 @@ class ScreenManager:
 			self._lock.release()
 
 	def _screenLoop(self):
-		self._logger.info("*** Screen _screenLoop")
 
 		while not self._cancelMainLoop:
 			self._lock.acquire()
@@ -230,7 +229,7 @@ class ScreenManager:
 			self._logger.error('*** ScreenManager Error: _hideFullViews' + str(e), exc_info=True)
 
 	def _updateLedColor(self, siteState):
-		self._logger.info("*** Screen _updateLedColor: " + str(siteState.state))
+		# self._logger.info("*** Screen _updateLedColor: " + str(siteState.state))
 		try:
 			self._yellowImage.hide_all()
 			self._greenImage.hide_all()

@@ -16,26 +16,41 @@ import copy
 
 # LEDS
 kLedsProgramSteps = 100
-kTimeIntervalBetweenLedsUpdates = 0.3 # seconds
+kTimeIntervalBetweenLedsUpdates = 1 # seconds
 
 # Leds programs [RedInit, RedEnd, GreenInit, GreenEnd, BlueInit, BlueEnd]
-ProgramCold = [0, 0, 0, 0, 255, 90]  # Azul
-ProgramHot = [255, 90, 0, 0, 0, 0]  # Rojo
-ProgramDry = [0, 0, 255, 90, 0, 0]  # Verde
-ProgramMaintenance = [255, 255, 30, 30, 0, 0]  # Naranja rojizo
-ProgramStandBy = [255, 100, 255, 100, 255, 100]  # Blanco
+ProgramBlue = [0, 0, 0, 0, 0, 255]  
+ProgramRed = [0, 255, 0, 0, 0, 0]  
+ProgramGreen = [0, 0, 0, 255, 0, 0]  
+ProgramYellow = [0, 255, 0, 80, 0, 255]  
 
 # Color PIN addresses (GPIO positions)
-kRedPinAddress = 24
-kGreenPinAddress = 18
-kBluePinAddress = 23
+kRedPinAddress = 17
+kGreenPinAddress = 27
+kBluePinAddress = 22
 
 # LEds state
-StateHot = 1
-StateCold = 2
-stateDry = 3
-StateMaintenance = 4
-StateNone = 0
+StateUnknown = 0
+StateNotRecheable = 1
+StateDown = 2
+StateUp = 3
+
+# WaitingTime (segs)
+StateUnknownTime = 0
+StateNotRecheableTime = 3
+StateDownTime = 8
+StateUpTime = 1
+
+StateUnknownTimeOn = 1
+StateNotRecheableTimeOn = 1
+StateDownTimeOn = 0.5
+StateUpTimeOn = 2
+
+# Led steps (segs)
+StateUnknownSteps = 100
+StateNotRecheableSteps = 20
+StateDownSteps = 10
+StateUpSteps = 20
 
 class LedsManager:
 	"""Manager for Leds control. Uses Pi-Blaster library in order to send OS cmds to /dev/pi-blaster"""
@@ -43,8 +58,8 @@ class LedsManager:
 	def __init__(self, settings, logger):
 		self._settings = settings
 		self._logger = logger
-		self._previousState = StateNone
-		self._previousProgram = ProgramStandBy
+		self._previousState = StateUnknown
+		self._previousProgram = ProgramYellow
 		self._currentRedValue = 0
 		self._currentGreenValue = 0
 		self._currentBlueValue = 0
@@ -91,6 +106,7 @@ class LedsManager:
 		self._logger.info("%%% LEDS _leedsLoop")
 		
 		while not self._cancelMainLoop:
+			self._logger.info("%%% LEDS _leedsLoop again")
 			self._lock.acquire()
 			try:
 				siteState = copy.deepcopy(self._siteState)  # create a copy to avoid race conditions
@@ -101,30 +117,30 @@ class LedsManager:
 				
 			ledsLog = ""
 			newProgram = []
-			newState = StateHot
-			newProgram = ProgramHot
-			# if siteState.colorLeds == LedColorRed: # Calor
-				# newState = StateHot
-				# newProgram = ProgramHot
-				# ledsLog = "Hot"
-			# elif siteState.colorLeds == LedColorBlue:  # Frio
-			# 	newState = StateCold
-			# 	newProgram = ProgramCold
-			# 	ledsLog = "Cold"
-			# elif siteState.colorLeds == LedColorWhite:  # Secado
-			# 	newState = stateDry
-			# 	newProgram = ProgramDry
-			# 	ledsLog = "Drying"
-			# elif siteState.colorLeds == LedColorOrange:  # Mantenimiento
-			# 	newState = StateMaintenance
-			# 	newProgram = ProgramMaintenance
-			# 	ledsLog = "Maintenance"
-			# else:  # Resto
-			# 	newState = StateNone
-			# 	newProgram = ProgramStandBy
+			# newState = StateDown
+			# newProgram = ProgramRed
+			if siteState.state == SiteStateDown: # Red
+				newState = StateDown
+				newProgram = ProgramRed
+				ledsLog = "Red"
+			elif siteState.state == SiteStateNotRecheable:  # Blue
+				newState = StateNotRecheable
+				newProgram = ProgramBlue
+				ledsLog = "Blue"
+			elif siteState.state == SiteStateUp:  # Green
+				newState = StateUp
+				newProgram = ProgramGreen
+				ledsLog = "Green"
+			elif siteState.state == SiteStateUnknown:  # Yellow
+				newState = StateUnknown
+				newProgram = ProgramYellow
+				ledsLog = "Yellow"
+			else:  # Resto
+				newState = StateUnknown
+				newProgram = ProgramYellow
 	
 			if self._previousState != newState:
-				self._logger.info("%%% LEDS  WriteLeds: Changing " + ledsLog)
+				self._logger.info("%%% LEDS  WriteLeds: state " + str(self._previousState) + " " + ledsLog)
 				self._previousState = newState
 				self._writeSingle([self._previousProgram[0],
 							 newProgram[0],
@@ -134,8 +150,10 @@ class LedsManager:
 							 newProgram[4]])
 				self._previousProgram = newProgram
 			else:
-				self._writeProgram(newProgram)
-			
+				self._logger.info("%%% LEDS _leedsLoop again state " + str(self._previousState) + " " + ledsLog)
+				self._writeProgram(self._previousProgram)
+
+			# self._logger.info("%%% LEDS _leedsLoop again state " + str(self._previousState))
 			sleep(kTimeIntervalBetweenLedsUpdates)
 
 	def _writePWM(self, pin, value):
@@ -154,34 +172,57 @@ class LedsManager:
 
 	def _writeProgram(self, ledProgram):
 		"""Writes leds program from start value to end value and returns to start value (fadeIn/fadeOut)"""
+		sleepTime = 0
+		timeOn = 0
+		steps = kLedsProgramSteps
+		if self._previousState == StateUnknown:
+			sleepTime = StateUnknownTime
+			steps = StateUnknownSteps
+			timeOn = StateUnknownTimeOn
+		elif self._previousState == StateNotRecheable:
+			sleepTime = StateNotRecheableTime
+			steps = StateNotRecheableSteps
+			timeOn = StateNotRecheableTimeOn
+		elif self._previousState == StateDown:
+			sleepTime = StateDownTime
+			steps = StateDownSteps
+			timeOn = StateDownTimeOn
+		else:
+			sleepTime = StateUpTime
+			steps = StateUpSteps
+			timeOn = StateUpTimeOn
 
 		iniR = ledProgram[0]
 		endR = ledProgram[1]
 		self._currentRedValue = iniR
-		aveR = (endR - iniR) / kLedsProgramSteps
+		aveR = (endR - iniR) / steps
 
 		iniG = ledProgram[2]
 		endG = ledProgram[3]
 		self._currentGreenValue = iniG
-		aveG = (endG - iniG) / kLedsProgramSteps
+		aveG = (endG - iniG) / steps
 
 		iniB = ledProgram[4]
 		endB = ledProgram[5]
 		self._currentBlueValue = iniB
-		aveB = (endB - iniB) / kLedsProgramSteps
+		aveB = (endB - iniB) / steps
 
-		for i in range(0, kLedsProgramSteps):
+
+		for i in range(0, steps):
 			self._currentRedValue += aveR
 			self._currentGreenValue += aveG
 			self._currentBlueValue += aveB
 			self._writeColor(self._currentRedValue, self._currentGreenValue, self._currentBlueValue)
 
-		for i in range(0, kLedsProgramSteps):
+		sleep(timeOn)
+
+		for i in range(0, steps):
 			self._currentRedValue -= aveR
 			self._currentGreenValue -= aveG
 			self._currentBlueValue -= aveB
 			self._writeColor(self._currentRedValue, self._currentGreenValue, self._currentBlueValue)
 
+		sleep(sleepTime)
 
 	def _writeSingle(self, ledProgram):
 		"""Writes leds program from start value to end value (fadeIn)"""
