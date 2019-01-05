@@ -78,3 +78,6 @@ class WebClient:
 		except urllib2.URLError as e: 
 			self._logger.error('### WebClient canOpenUrl  exception: ' + str(e), exc_info=True)
 			return False
+		except Exception as e:
+			self._logger.error('### WebClient canOpenUrl exception: ' + str(e), exc_info=True)
+			return False
